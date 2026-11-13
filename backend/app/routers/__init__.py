@@ -21,6 +21,7 @@ from app.routers import etl as router_etl
 from app.routers import lake as router_lake
 from app.routers import catalog as router_catalog
 from app.routers import monitor as router_monitor
+from app.routers import monsample as router_monsample
 from app.routers import snapshot as router_snapshot
 
-ROUTERS = [router_ods, router_dwd, router_dws, router_ads, router_dimdef, router_factdef, router_partition, router_quality, router_lineage, router_backfill, router_metadata, router_etl, router_lake, router_catalog, router_monitor, router_snapshot]
+ROUTERS = [router_ods, router_dwd, router_dws, router_ads, router_dimdef, router_factdef, router_partition, router_quality, router_lineage, router_backfill, router_metadata, router_etl, router_lake, router_catalog, router_monitor, router_monsample, router_snapshot]

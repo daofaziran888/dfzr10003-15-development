@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.services.monsample import SamplingService
 from app.store import store
 
 MODULE = "monitor"
@@ -10,6 +11,8 @@ REQUIRED_FIELDS = ["指标编号", "指标名称", "监控对象"]
 STATUS_ORDER = ["草稿", "运行中", "已暂停", "已归档"]
 ACTION_RULES = {"启动监控": "草稿", "暂停监控": "运行中", "归档指标": "已暂停"}
 NEGATIVE_ACTIONS = []
+
+sampling = SamplingService()
 
 
 class MonitorService:
@@ -28,7 +31,12 @@ class MonitorService:
             rows = [row for row in rows if row.get("status") == status]
         total = len(rows)
         start = max(page - 1, 0) * size
-        return rows[start:start + size], total
+        # 监控页与质量页、调度页显示同一采样批次与阈值版本，不只停留在监控表单里
+        return [self._with_trace(row) for row in rows[start:start + size]], total
+
+    @staticmethod
+    def _with_trace(row: dict[str, Any]) -> dict[str, Any]:
+        return {**row, **sampling.trace_fields(metric=row.get("指标编号"))}
 
     def get_entry(self, entry_id: int) -> dict[str, Any] | None:
         return store.find(MODULE, entry_id)

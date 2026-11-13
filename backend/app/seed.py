@@ -1,7 +1,68 @@
 """示例数据：每个模块给几条不同状态的记录，方便起服务后立刻看到内容。"""
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from typing import Any
+
+
+def _monsample_rows() -> list[dict[str, Any]]:
+    """监控采样种子数据：采样时间相对启动时刻生成，保证新回调始终排在时间线最上方。
+
+    运行中样本为 MONI-0002，采样来源为 QUAL-0002（质量校验）与 ETL-0002（调度执行），
+    历史告警保留当时的阈值版本 THR-v1.0，当前生效阈值版本为 THR-v1.1。
+    """
+    now = datetime.now()
+
+    def ts(days: float) -> str:
+        return (now - timedelta(days=days)).strftime("%Y-%m-%d %H:%M")
+
+    def batch(days: float, seq: int) -> str:
+        day = (now - timedelta(days=days)).strftime("%Y%m%d")
+        return f"BATCH-{day}-{seq:03d}"
+
+    base: dict[str, Any] = {
+        "指标编号": "MONI-0002",
+        "指标名称": "运行监控面板样例2",
+        "监控对象": "运行监控面板样例2",
+        "采样周期": "每小时",
+        "调度任务": "ETL-0002",
+        "质量规则": "QUAL-0002",
+    }
+    return [
+        {**base, 'id': 1, 'status': '无告警', 'pending': False, 'abnormal': False,
+         '采样编号': 'SAMP-0001', '采样批次': batch(3, 1),
+         '来源类型': '调度执行', '来源编号': 'ETL-0002',
+         '指标值': 72, '阈值版本': 'THR-v1.0', '阈值上界': 100, '阈值下界': 0,
+         '越界结果': '正常', '告警状态': '无告警', '处理人': None, '处理时间': None,
+         '采样状态': '成功', '失败来源': None, '采样时间': ts(3)},
+        {**base, 'id': 2, 'status': '已确认', 'pending': False, 'abnormal': True,
+         '采样编号': 'SAMP-0002', '采样批次': batch(2, 1),
+         '来源类型': '质量校验', '来源编号': 'QUAL-0002',
+         '指标值': 108, '阈值版本': 'THR-v1.0', '阈值上界': 100, '阈值下界': 0,
+         '越界结果': '越界', '告警状态': '已确认', '处理人': '值班管理员', '处理时间': ts(1.95),
+         '采样状态': '成功', '失败来源': None, '采样时间': ts(2)},
+        {**base, 'id': 3, 'status': '已忽略', 'pending': False, 'abnormal': True,
+         '采样编号': 'SAMP-0003', '采样批次': batch(1.9, 2),
+         '来源类型': '调度执行', '来源编号': 'ETL-0002',
+         '指标值': 104, '阈值版本': 'THR-v1.0', '阈值上界': 100, '阈值下界': 0,
+         '越界结果': '越界', '告警状态': '已忽略', '处理人': '值班管理员', '处理时间': ts(1.8),
+         '采样状态': '成功', '失败来源': None, '采样时间': ts(1.85)},
+        {**base, 'id': 4, 'status': '无告警', 'pending': True, 'abnormal': True,
+         '采样编号': 'SAMP-0004', '采样批次': batch(1, 1),
+         '来源类型': '质量校验', '来源编号': 'QUAL-0002',
+         '指标值': None, '阈值版本': 'THR-v1.1', '阈值上界': 90, '阈值下界': 0,
+         '越界结果': '采样失败', '告警状态': '无告警', '处理人': None, '处理时间': None,
+         '采样状态': '失败',
+         '失败来源': f"批次 {batch(1, 1)} 的 QUAL-0002 校验超时，需从该失败批次继续采样",
+         '采样时间': ts(1)},
+        {**base, 'id': 5, 'status': '待确认', 'pending': True, 'abnormal': True,
+         '采样编号': 'SAMP-0005', '采样批次': batch(0.05, 1),
+         '来源类型': '调度执行', '来源编号': 'ETL-0002',
+         '指标值': 96, '阈值版本': 'THR-v1.1', '阈值上界': 90, '阈值下界': 0,
+         '越界结果': '越界', '告警状态': '待确认', '处理人': None, '处理时间': None,
+         '采样状态': '成功', '失败来源': None, '采样时间': ts(0.05)},
+    ]
+
 
 SEED_ROWS: dict[str, list[dict[str, Any]]] = {
     "ods": [{'id': 1,
@@ -544,6 +605,7 @@ SEED_ROWS: dict[str, list[dict[str, Any]]] = {
   '采样周期': '运行监控面板样例3',
   '最近数值': '运行监控面板样例3',
   '监控状态': '运行监控面板样例3'}],
+    "monsample": _monsample_rows(),
     "snapshot": [{'id': 1,
   'status': '草稿',
   'pending': True,

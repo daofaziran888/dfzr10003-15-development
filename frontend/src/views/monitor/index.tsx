@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { request } from '@/api/client'
+import SamplingTimeline from '@/components/SamplingTimeline'
 
 const ENDPOINT = '/api/monitor'
 const columns = [
@@ -11,7 +12,10 @@ const columns = [
   "告警阈值",
   "采样周期",
   "最近数值",
-  "监控状态"
+  "监控状态",
+  "最近采样批次",
+  "采样阈值版本",
+  "采样失败来源"
 ]
 const actions = [
   "启动监控",
@@ -73,10 +77,11 @@ export default function MonitorView() {
     try {
       const response = await request(`${ENDPOINT}/${row.id}/actions`, {
         method: 'POST',
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ values: { action } }),
       })
-      if (!response.ok) {
-        throw new Error('运行监控面板动作未生效，请稍后重试')
+      const payload = await response.json()
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload?.message || '运行监控面板动作未生效，请稍后重试')
       }
       await reload()
     } catch (error) {
@@ -157,6 +162,8 @@ export default function MonitorView() {
         <span>共 {total} 条运行监控面板记录</span>
         {errorMessage && <span className="error-text">{errorMessage}</span>}
       </footer>
+
+      <SamplingTimeline title="监控采样时间线（运行监控面板）" />
     </section>
   )
 }

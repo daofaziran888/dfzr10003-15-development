@@ -209,6 +209,18 @@ class MonitorEntry(BaseModel):
     field_6: str | None = None  # 最近数值
     field_7: str | None = None  # 监控状态
 
+class MonsampleEntry(BaseModel):
+    """监控采样读数明细结构。"""
+
+    field_0: str | None = None  # 采样编号
+    field_1: str | None = None  # 指标编号
+    field_2: str | None = None  # 监控对象
+    field_3: str | None = None  # 采样周期
+    field_4: str | None = None  # 采样批次
+    field_5: str | None = None  # 指标值
+    field_6: str | None = None  # 阈值版本
+    field_7: str | None = None  # 告警状态
+
 class SnapshotEntry(BaseModel):
     """快照记录明细结构。"""
 

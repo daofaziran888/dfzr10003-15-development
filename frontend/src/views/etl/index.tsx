@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { request } from '@/api/client'
+import SamplingTimeline from '@/components/SamplingTimeline'
 
 const ENDPOINT = '/api/etl'
 const columns = [
@@ -11,7 +12,10 @@ const columns = [
   "重试次数",
   "超时分钟",
   "告警渠道",
-  "任务状态"
+  "任务状态",
+  "最近采样批次",
+  "采样阈值版本",
+  "采样失败来源"
 ]
 const actions = [
   "启动任务",
@@ -73,10 +77,11 @@ export default function EtlView() {
     try {
       const response = await request(`${ENDPOINT}/${row.id}/actions`, {
         method: 'POST',
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ values: { action } }),
       })
-      if (!response.ok) {
-        throw new Error('ETL任务调度动作未生效，请稍后重试')
+      const payload = await response.json()
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload?.message || 'ETL任务调度动作未生效，请稍后重试')
       }
       await reload()
     } catch (error) {
@@ -157,6 +162,8 @@ export default function EtlView() {
         <span>共 {total} 条ETL任务调度记录</span>
         {errorMessage && <span className="error-text">{errorMessage}</span>}
       </footer>
+
+      <SamplingTimeline title="监控采样时间线（ETL任务调度）" />
     </section>
   )
 }

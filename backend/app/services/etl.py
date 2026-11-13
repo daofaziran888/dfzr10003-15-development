@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.services.monsample import SamplingService
 from app.store import store
 
 MODULE = "etl"
@@ -10,6 +11,8 @@ REQUIRED_FIELDS = ["任务编号", "任务名称", "依赖任务"]
 STATUS_ORDER = ["草稿", "运行中", "已暂停", "已完成"]
 ACTION_RULES = {"启动任务": "草稿", "暂停任务": "运行中", "归档任务": "已暂停"}
 NEGATIVE_ACTIONS = []
+
+sampling = SamplingService()
 
 
 class EtlService:
@@ -28,7 +31,12 @@ class EtlService:
             rows = [row for row in rows if row.get("status") == status]
         total = len(rows)
         start = max(page - 1, 0) * size
-        return rows[start:start + size], total
+        # 调度页沿用监控采样的同一批次与阈值版本，并暴露失败来源
+        return [self._with_trace(row) for row in rows[start:start + size]], total
+
+    @staticmethod
+    def _with_trace(row: dict[str, Any]) -> dict[str, Any]:
+        return {**row, **sampling.trace_fields(task=row.get("任务编号"))}
 
     def get_entry(self, entry_id: int) -> dict[str, Any] | None:
         return store.find(MODULE, entry_id)
